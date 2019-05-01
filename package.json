@@ -29,9 +29,6 @@
     "method-override": "^3.0.0",
     "morgan": "^1.9.1",
     "node-fetch": "^2.5.0",
-    "objection-db-errors": "^1.1.1",
-    "objection-guid": "^3.0.2",
-    "objection-unique": "^1.0.1",
     "sqlite3": "^4.0.6",
     "unsplash-js": "^5.0.0",
     "uuid": "^3.3.2"
