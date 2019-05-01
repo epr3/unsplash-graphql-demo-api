@@ -6,7 +6,8 @@ module.exports = {
     const token = req.header('Authorization');
     if (token) {
       try {
-        return await jwt.verify(token.split('JWT ')[1], process.env.JWT_SECRET);
+        await jwt.verify(token.split('JWT ')[1], process.env.JWT_SECRET);
+        return jwt.decode(token.split('JWT ')[1]);
       } catch (e) {
         throw new AuthenticationError('Your session expired. Sign in again.');
       }

@@ -23,14 +23,18 @@ const typeDefs = `
 const resolvers = {
   Query: {
     me: combineResolvers(isAuthenticated, async (_root, _args, { user }) => {
-      return await User.forge({ id: user.id }).fetch({ require: true });
+      const response = await User.forge({ id: user.id }).fetch({
+        require: true
+      });
+      return response.toJSON();
     })
   },
   Mutation: {
     register: async (_root, { name, email, password }) => {
       const user = await User.forge({ name, email, password }).save();
+      const response = user.toJSON();
       return jwt.sign(
-        { context: { id: user.id, email: user.email } },
+        { context: { id: response.id, email: response.email } },
         process.env.JWT_SECRET,
         { expiresIn: '1y' }
       );
@@ -46,8 +50,10 @@ const resolvers = {
         throw new AuthenticationError('The credentials were invalid!');
       }
 
+      const response = user.toJSON();
+
       return jwt.sign(
-        { context: { id: user.id, email: user.email } },
+        { context: { id: response.id, email: response.email } },
         process.env.JWT_SECRET,
         { expiresIn: '1y' }
       );

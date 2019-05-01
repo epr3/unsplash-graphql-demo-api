@@ -4,6 +4,7 @@ const Relations = require('bookshelf-schema/lib/relations');
 
 module.exports = bookshelf.model('Album', {
   tableName: 'albums',
+  uuid: true,
   schema: [
     Fields.StringField('name'),
     Relations.BelongsTo('User'),

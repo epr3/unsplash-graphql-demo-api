@@ -1,14 +1,20 @@
+const uuid = require('uuid/v4');
 exports.up = function(knex, Promise) {
   return knex.schema
     .createTable('users', table => {
-      table.uuid('id').primary();
+      table
+        .uuid('id')
+        .primary()
+        .defaultTo(uuid());
       table.string('name');
-      table.string('email');
-      table.unique('email');
+      table.string('email').unique('email');
       table.integer('password');
     })
     .createTable('albums', table => {
-      table.uuid('id').primary();
+      table
+        .uuid('id')
+        .primary()
+        .defaultTo(uuid());
       table.string('name');
       table
         .uuid('userId')
@@ -18,8 +24,12 @@ exports.up = function(knex, Promise) {
         .index();
     })
     .createTable('images', table => {
-      table.uuid('id').primary();
+      table
+        .uuid('id')
+        .primary()
+        .defaultTo(uuid());
       table.string('unsplashId');
+      table.string('imageLink');
       table
         .uuid('albumId')
         .references('id')

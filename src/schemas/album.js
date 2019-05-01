@@ -3,11 +3,14 @@ const { Album, Image } = require('../models');
 const { makeExecutableSchema } = require('graphql-tools');
 const { combineResolvers } = require('graphql-resolvers');
 const { isAuthenticated } = require('../resolvers/authenticate');
+const unsplash = require('../config/unsplash');
+const { toJson } = require('unsplash-js');
 
 const typeDefs = `
   type Image {
-    id: ID!
+    id: ID
     unsplashId: String
+    imageLink: String
   }
   type Album {
     id: ID!
@@ -18,6 +21,7 @@ const typeDefs = `
   type Query {
     album(id: ID!): Album
     albums: [Album]!
+    images: [Image]!
   }
   type AlbumResponse {
     id: String
@@ -34,15 +38,22 @@ const typeDefs = `
 
 const resolvers = {
   Query: {
-    album: combineResolvers(
-      isAuthenticated,
-      async (_root, { id }) =>
-        await Album.forge({ id }).fetch({ require: true })
-    ),
-    albums: combineResolvers(
-      isAuthenticated,
-      async () => await Album.forge().fetchAll()
-    )
+    images: combineResolvers(isAuthenticated, async () => {
+      const photos = await unsplash.photos.listPhotos();
+      const response = await toJson(photos);
+      return response.map(item => ({
+        unsplashId: item.id,
+        imageLink: item.urls.regular
+      }));
+    }),
+    album: combineResolvers(isAuthenticated, async (_root, { id }) => {
+      const response = await Album.forge({ id }).fetch({ require: true });
+      return response.toJSON();
+    }),
+    albums: combineResolvers(isAuthenticated, async () => {
+      const response = await Album.forge().fetchAll();
+      return response.toJSON();
+    })
   },
   Mutation: {
     createAlbum: combineResolvers(
@@ -59,7 +70,7 @@ const resolvers = {
               albumId: album.id
             }).save()
         );
-        return album;
+        return album.toJSON();
       }
     ),
     updateAlbum: combineResolvers(
@@ -69,7 +80,7 @@ const resolvers = {
         const album = await Album.forge(id)
           .fetch({ require: true })
           .save({ name });
-        return album;
+        return album.toJSON();
       }
     ),
     deleteAlbum: combineResolvers(
@@ -92,7 +103,7 @@ const resolvers = {
               albumId: id
             }).save()
         );
-        return images;
+        return images.toJSON();
       }
     ),
     deleteImagesFromAlbum: combineResolvers(

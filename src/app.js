@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 
 dotenv.config();
+global.fetch = require('node-fetch');
 require('./config/bookshelf');
 require('./models');
 
@@ -20,7 +21,7 @@ const server = new ApolloServer({
     const user = await getMe(req);
 
     return {
-      user
+      user: user ? user.context : null
     };
   }
 });
