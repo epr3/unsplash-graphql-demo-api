@@ -1,6 +1,5 @@
 const { isAlbumOwner } = require('../resolvers/albumOwner');
-const Album = require('../models');
-const Image = require('../models');
+const { Album, Image } = require('../models');
 const { makeExecutableSchema } = require('graphql-tools');
 const { combineResolvers } = require('graphql-resolvers');
 const { isAuthenticated } = require('../resolvers/authenticate');
@@ -18,7 +17,7 @@ const typeDefs = `
   }
   type Query {
     album(id: ID!): Album
-    albums(userId: ID): [Album]!
+    albums: [Album]!
   }
   type AlbumResponse {
     id: String
@@ -40,10 +39,9 @@ const resolvers = {
       async (_root, { id }) =>
         await Album.forge({ id }).fetch({ require: true })
     ),
-    albums: combineResolvers(isAuthenticated, async (_root, { userId }) =>
-      userId
-        ? await Album.forge({ userId }).fetchAll()
-        : await Album.forge().fetchAll()
+    albums: combineResolvers(
+      isAuthenticated,
+      async () => await Album.forge().fetchAll()
     )
   },
   Mutation: {

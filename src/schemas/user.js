@@ -36,7 +36,6 @@ const resolvers = {
       );
     },
     login: async (_root, { email, password }) => {
-      console.log(User);
       const user = await User.forge({ email }).fetch();
 
       if (!user) {
