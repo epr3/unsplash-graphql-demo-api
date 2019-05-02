@@ -11,9 +11,9 @@ module.exports = bookshelf.model('Album', {
     Relations.HasMany('Image')
   ],
   images: function() {
-    return this.hasMany('Image');
+    return this.hasMany('Image', 'albumId');
   },
   user: function() {
-    return this.belongsTo('Album');
+    return this.belongsTo('User', 'userId');
   }
 });

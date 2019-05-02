@@ -21,25 +21,24 @@ const typeDefs = `
   type Query {
     album(id: ID!): Album
     albums: [Album]!
-    images: [Image]!
+    images(page: Int): [Image]!
   }
-  type AlbumResponse {
-    id: String
-    name: String
-    images: [Image]
+  input InputImage {
+    unsplashId: String!
+    imageLink: String!
   }
   type Mutation {
-    createAlbum(name: String!, unsplashIds: [String]!): AlbumResponse!
-    updateAlbum(name: String!): AlbumResponse!
+    createAlbum(name: String!, images: [InputImage]!): Album!
+    updateAlbum(name: String!): Album!
     deleteAlbum(id: ID!): Boolean!
-    addImagesToAlbum(id: ID!, unsplashIds: [String]!): AlbumResponse!
+    addImagesToAlbum(id: ID!, unsplashIds: [String]!): Album!
     deleteImagesFromAlbum(id: ID, unsplashIds: [String]!): Boolean!
   }`;
 
 const resolvers = {
   Query: {
-    images: combineResolvers(isAuthenticated, async () => {
-      const photos = await unsplash.photos.listPhotos();
+    images: combineResolvers(isAuthenticated, async (_root, { page }) => {
+      const photos = await unsplash.photos.listPhotos(page, 16);
       const response = await toJson(photos);
       return response.map(item => ({
         unsplashId: item.id,
@@ -51,22 +50,26 @@ const resolvers = {
       return response.toJSON();
     }),
     albums: combineResolvers(isAuthenticated, async () => {
-      const response = await Album.forge().fetchAll();
+      const response = await Album.forge().fetchAll({
+        withRelated: ['images']
+      });
+      console.log(response);
       return response.toJSON();
     })
   },
   Mutation: {
     createAlbum: combineResolvers(
       isAuthenticated,
-      async (_root, { name, unsplashIds }, { user }) => {
+      async (_root, { name, images }, { user }) => {
         const album = await Album.forge({
           name,
           userId: user.id
         }).save();
-        unsplashIds.map(
+        images.map(
           async item =>
             await Image.forge({
-              unsplashId: item,
+              unsplashId: item.unsplashId,
+              imageLink: item.imageLink,
               albumId: album.id
             }).save()
         );

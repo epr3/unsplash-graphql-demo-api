@@ -8,7 +8,7 @@ exports.up = function(knex, Promise) {
         .defaultTo(uuid());
       table.string('name');
       table.string('email').unique('email');
-      table.integer('password');
+      table.string('password');
     })
     .createTable('albums', table => {
       table

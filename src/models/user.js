@@ -24,6 +24,6 @@ module.exports = bookshelf.model('User', {
     });
   },
   albums: function() {
-    return this.many('Album');
+    return this.hasMany('Album', 'albumId');
   }
 });

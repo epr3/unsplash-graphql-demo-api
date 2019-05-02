@@ -7,6 +7,6 @@ module.exports = bookshelf.model('Image', {
   uuid: true,
   schema: [Fields.StringField('unsplashId'), Relations.BelongsTo('Album')],
   album: function() {
-    return this.belongsTo('Album');
+    return this.belongsTo('Album', 'albumId');
   }
 });
