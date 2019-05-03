@@ -22,7 +22,7 @@ const typeDefs = `
     album(id: ID!): Album!
     albums(userId: ID): [Album]!
     albumsByUserId(userId: ID!): [Album]!
-    images(page: Int): [Image]!
+    images(page: Int!): [Image]!
   }
   input InputImage {
     unsplashId: String!
@@ -30,8 +30,8 @@ const typeDefs = `
   }
   type Mutation {
     createAlbum(name: String!, images: [InputImage]!): Album!
-    updateAlbum(name: String!): Album!
-    deleteAlbum(id: ID!): Boolean!
+    updateAlbum(id: ID!, name: String!): Album!
+    deleteAlbum(id: ID!): ID!
     addImagesToAlbum(id: ID!, unsplashIds: [String]!): Album!
     deleteImagesFromAlbum(id: ID, unsplashIds: [String]!): Boolean!
   }`;
@@ -69,13 +69,15 @@ const resolvers = {
           name,
           userId: user.id
         }).save();
-        const imagesResponse = await images.map(
-          async item =>
-            await Image.forge({
-              unsplashId: item.unsplashId,
-              imageLink: item.imageLink,
-              albumId: album.id
-            }).save()
+        const imagesResponse = await Promise.all(
+          images.map(
+            async item =>
+              await Image.forge({
+                unsplashId: item.unsplashId,
+                imageLink: item.imageLink,
+                albumId: album.id
+              }).save()
+          )
         );
         return {
           ...album.toJSON(),
@@ -87,7 +89,7 @@ const resolvers = {
       isAuthenticated,
       isAlbumOwner,
       async (_root, { id, name }) => {
-        const album = await Album.forge(id)
+        const album = await Album.forge({ id })
           .fetch({ require: true })
           .save({ name });
         return album.toJSON();
@@ -97,9 +99,8 @@ const resolvers = {
       isAuthenticated,
       isAlbumOwner,
       async (_root, { id }) => {
-        return Album.forge({ id })
-          .fetch({ require: true })
-          .destroy();
+        await Album.forge({ id }).destroy();
+        return id;
       }
     ),
     addImagesToAlbum: combineResolvers(

@@ -1,4 +1,4 @@
-const Album = require('../models');
+const { Album } = require('../models');
 const { ForbiddenError } = require('apollo-server-errors');
 const { skip } = require('graphql-resolvers');
 
