@@ -14,6 +14,7 @@ const typeDefs = `
   }
   type Query {
     me: User
+    userById(userId: ID!): User!
   }
   type Mutation {
     login(email: String!, password: String!): String
@@ -24,6 +25,12 @@ const resolvers = {
   Query: {
     me: combineResolvers(isAuthenticated, async (_root, _args, { user }) => {
       const response = await User.forge({ id: user.id }).fetch({
+        require: true
+      });
+      return response.toJSON();
+    }),
+    userById: combineResolvers(isAuthenticated, async (_root, { userId }) => {
+      const response = await User.forge({ id: userId }).fetch({
         require: true
       });
       return response.toJSON();

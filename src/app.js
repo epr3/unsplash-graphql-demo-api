@@ -15,8 +15,34 @@ const user = require('./schemas/user');
 
 const { getMe } = require('./util/auth');
 
+const linkTypeDefs = `
+  extend type Album {
+    user: User!
+  }
+`;
+
 const server = new ApolloServer({
-  schema: mergeSchemas({ schemas: [user, album] }),
+  schema: mergeSchemas({
+    schemas: [user, album, linkTypeDefs],
+    resolvers: {
+      Album: {
+        user: {
+          resolve(parent, args, context, info) {
+            return info.mergeInfo.delegateToSchema({
+              schema: user,
+              operation: 'query',
+              fieldName: 'userById',
+              args: {
+                userId: parent.userId
+              },
+              context,
+              info
+            });
+          }
+        }
+      }
+    }
+  }),
   context: async ({ req }) => {
     const user = await getMe(req);
 
