@@ -19,8 +19,9 @@ const typeDefs = `
     userId: ID!
   }
   type Query {
-    album(id: ID!): Album
-    albums: [Album]!
+    album(id: ID!): Album!
+    albums(userId: ID): [Album]!
+    albumsByUserId(userId: ID!): [Album]!
     images(page: Int): [Image]!
   }
   input InputImage {
@@ -49,11 +50,14 @@ const resolvers = {
       const response = await Album.forge({ id }).fetch({ require: true });
       return response.toJSON();
     }),
-    albums: combineResolvers(isAuthenticated, async () => {
-      const response = await Album.forge().fetchAll({
+    albums: combineResolvers(isAuthenticated, async (_root, { userId }) => {
+      let albumForge = Album.forge();
+      if (userId) {
+        albumForge = Album.forge({ userId });
+      }
+      const response = await albumForge.fetchAll({
         withRelated: ['images']
       });
-      console.log(response);
       return response.toJSON();
     })
   },
@@ -65,7 +69,7 @@ const resolvers = {
           name,
           userId: user.id
         }).save();
-        images.map(
+        const imagesResponse = await images.map(
           async item =>
             await Image.forge({
               unsplashId: item.unsplashId,
@@ -73,7 +77,10 @@ const resolvers = {
               albumId: album.id
             }).save()
         );
-        return album.toJSON();
+        return {
+          ...album.toJSON(),
+          images: imagesResponse.map(async item => await item.toJSON())
+        };
       }
     ),
     updateAlbum: combineResolvers(

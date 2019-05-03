@@ -4,7 +4,7 @@ module.exports = {
   development: {
     client: 'sqlite3',
     useNullAsDefault: true,
-    debug: true,
+    debug: false,
     connection: {
       filename: './db_dev.sqlite'
     },
